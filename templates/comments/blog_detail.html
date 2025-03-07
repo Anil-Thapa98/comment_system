@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog Detail - My Website{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ blog.title }}</h2>
+    <p>{{ blog.content }}</p>
+
+    <h3>Comments:</h3>
+
+    <!-- Comment Form -->
+    <form id="comment-form" 
+          hx-post="{% url 'comments:add_comment' blog.id %}" 
+          hx-target="#comments-list" 
+          hx-swap="afterbegin"  
+          hx-on::after-request="this.reset()"
+          hx-indicator="#loading-spinner">  
+        {% csrf_token %}
+        <div class="form-group">
+            <textarea class="form-control" name="content" rows="3" placeholder="Write your comment..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Submit Comment</button>
+    </form>
+
+    <hr>
+
+    <!-- Comments List -->
+    <div id="comments-list">
+        {% for comment in comments %}
+            {% include "comments/comment.html" with comment=comment %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- JavaScript to Toggle Reply and Edit Forms -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("reply-btn")) {
+            let commentId = event.target.dataset.commentId;
+            let replyForm = document.getElementById(`reply-form-${commentId}`);
+            if (replyForm) {
+                replyForm.style.display = replyForm.style.display === "none" ? "block" : "none";
+            }
+        }
+    });
+});
+
+function toggleEditForm(commentId) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const editForm = document.getElementById(`edit-form-${commentId}`);
+    if (contentDiv && editForm) {
+        contentDiv.style.display = contentDiv.style.display === "none" ? "block" : "none";
+        editForm.style.display = editForm.style.display === "none" ? "block" : "none";
+    }
+}
+
+function cancelEdit(commentId) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const editForm = document.getElementById(`edit-form-${commentId}`);
+    if (contentDiv && editForm) {
+        contentDiv.style.display = "block";
+        editForm.style.display = "none";
+    }
+}
+</script>
+
+<!-- Cool Loading Spinner -->
+<div id="loading-spinner" class="loading-spinner" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<style type="text/css">
+    /* CSS for cool loading spinner */
+    .loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.25em;
+    }
+
+    /* CSS for smooth transition effect */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .comment-item, .reply-item {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* Style for @username */
+    .username-mention {
+        font-weight: 600;
+        color: #007bff; /* Blue color */
+    }
+</style>
+{% endblock %}

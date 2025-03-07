@@ -1,0 +1,79 @@
+<div class="card mb-3 comment-item" id="comment-{{ comment.id }}">
+    <div class="card-body">
+        <!-- Display Comment Content -->
+        <div id="comment-content-{{ comment.id }}">
+            <h5>{{ comment.user.username }}</h5>
+            <p>{{ comment.content }}</p>
+        </div>
+
+        <!-- Edit Form (Hidden by Default) -->
+        <div id="edit-form-{{ comment.id }}" style="display: none;">
+            <form hx-post="{% url 'comments:edit_comment' comment.id %}" 
+                  hx-target="#comment-{{ comment.id }}" 
+                  hx-swap="outerHTML"
+                  hx-indicator="#loading-spinner">  <!-- Add this -->
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea class="form-control" name="content" rows="3" required>{{ comment.content }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-success btn-sm">Save</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit('{{ comment.id }}')">Cancel</button>
+            </form>
+        </div>
+
+        <!-- Like, Reply, Edit, Delete Buttons -->
+        <div class="d-flex align-items-center" style="font-size: 12px;">
+            <!-- Like Button -->
+            <button class="btn btn-primary btn-sm"
+                    hx-post="{% url 'comments:like_comment' comment.id %}"
+                    hx-target="#comment-{{ comment.id }} .like-btn"
+                    hx-swap="innerHTML"
+                    hx-indicator="#loading-spinner">  <!-- Add this -->
+                <span class="like-btn">👍 ({{ comment.total_likes }})</span>
+            </button>
+
+            <!-- Reply Button -->
+            <button class="btn btn-info reply-btn"
+                    data-comment-id="{{ comment.id }}">
+                Reply
+            </button>
+
+            <!-- Edit Button -->
+            <button class="btn btn-warning btn-sm"
+                    onclick="toggleEditForm('{{ comment.id }}')">
+                Edit
+            </button>
+
+            <!-- Delete Button -->
+            <button class="btn btn-danger btn-sm"
+                    hx-post="{% url 'comments:delete_comment' comment.id %}"
+                    hx-target="#comment-{{ comment.id }}"
+                    hx-swap="outerHTML"
+                    hx-indicator="#loading-spinner">  <!-- Add this -->
+                Delete
+            </button>
+        </div>
+    </div>
+
+    <!-- Reply Form (Hidden by Default) -->
+    <div id="reply-form-{{ comment.id }}" class="ms-4 mt-2" style="display: none;">
+        <form hx-post="{% url 'comments:add_reply' comment.id %}" 
+              hx-target="#replies-{{ comment.id }}" 
+              hx-swap="afterbegin"
+              hx-on::after-request="this.reset()"
+              hx-indicator="#loading-spinner">  <!-- Add this -->
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea class="form-control" name="content" rows="2" placeholder="Write a reply..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-success btn-sm">Submit Reply</button>
+        </form>
+    </div>
+
+    <!-- Replies Section -->
+    <div id="replies-{{ comment.id }}" class="ms-4">
+        {% for reply in comment.replies.all %}
+            {% include "comments/reply.html" with reply=reply %}
+        {% endfor %}
+    </div>
+</div>
