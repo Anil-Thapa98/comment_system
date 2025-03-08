@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="profile-content">
+ <h2>{{ profile.user.username }}'s Profile</h2>
+    {% if profile.verified %}
+        <p>✅ Verified</p>
+    {% else %}
+        <p>❌ Not Verified</p>
+    {% endif %}
+    <p>Bio: {{ profile.bio }}</p>
+    <p>Location: {{ profile.location }}</p>
+    {% if profile.profile_picture %}
+        <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" width="100">
+    {% endif %}
+
+    <h3>Blogs</h3>
+    <ul>
+        {% for blog in blogs %}
+            <li>{{ blog.title }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Comments</h3>
+    <ul>
+        {% for comment in comments %}
+            <li>{{ comment.content }}</li>
+        {% endfor %}
+    </ul>
+
+     
+    <h3>Update Profile</h3>
+    <form method="post" enctype="multipart/form-data" hx-post="{% url 'comments:profile' %}" hx-target="#profile-content">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+    </form>
+</div>
+{% endblock %}

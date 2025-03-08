@@ -8,35 +8,19 @@
             </p>
         </div>
 
-        <!-- Edit Form (Hidden by Default) -->
-        <div id="edit-form-{{ reply.id }}" style="display: none;">
-            <form hx-post="{% url 'comments:edit_comment' reply.id %}" 
-                  hx-target="#comment-{{ reply.id }}" 
-                  hx-swap="outerHTML"
-                  hx-indicator="#loading-spinner">  <!-- Add this -->
-                {% csrf_token %}
-                <div class="form-group">
-                    <textarea class="form-control" name="content" rows="2" required>{{ reply.content }}</textarea>
-                </div>
-                <button type="submit" class="btn btn-success btn-sm">Save</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit('{{ reply.id }}')">Cancel</button>
-            </form>
-        </div>
-
         <!-- Like, Reply, Edit, Delete Buttons -->
         <div class="d-flex align-items-center" style="font-size: 12px;">
             <!-- Like Button -->
             <button class="btn btn-link p-0 me-2 text-decoration-none"
                     hx-post="{% url 'comments:like_comment' reply.id %}"
                     hx-target="#comment-{{ reply.id }} .like-btn"
-                    hx-swap="innerHTML"
-                    hx-indicator="#loading-spinner">  <!-- Add this -->
+                    hx-swap="innerHTML">
                 <span class="like-btn text-primary">👍 Like ({{ reply.total_likes }})</span>
             </button>
 
             <!-- Reply Button -->
             <button class="btn btn-link p-0 me-2 text-decoration-none reply-btn"
-                    data-comment-id="{{ reply.id }}">
+                    onclick="toggleReplyForm('{{ reply.id }}')">
                 💬 Reply
             </button>
 
@@ -50,32 +34,41 @@
             <button class="btn btn-link p-0 text-decoration-none text-danger"
                     hx-post="{% url 'comments:delete_comment' reply.id %}"
                     hx-target="#comment-{{ reply.id }}"
-                    hx-swap="outerHTML"
-                    hx-indicator="#loading-spinner">  <!-- Add this -->
+                    hx-swap="outerHTML">
                 🗑 Delete
             </button>
         </div>
-    </div>
 
-    <!-- Reply Form (Hidden by Default) -->
-    <div id="reply-form-{{ reply.id }}" class="mt-2" style="display: none;">
-        <form hx-post="{% url 'comments:add_reply' reply.id %}" 
-              hx-target="#replies-{{ reply.id }}" 
-              hx-swap="afterbegin"
-              hx-on::after-request="this.reset()"
-              hx-indicator="#loading-spinner">  <!-- Add this -->
-            {% csrf_token %}
-            <div class="form-group mb-2">
-                <textarea class="form-control form-control-sm" name="content" rows="2" placeholder="Write a reply..." required></textarea>
-            </div>
-            <button type="submit" class="btn btn-success btn-sm">Submit Reply</button>
-        </form>
-    </div>
+        <!-- Reply Form (Hidden by Default) -->
+        <div id="reply-form-{{ reply.id }}" class="mt-2" style="display: none;">
+            <form hx-post="{% url 'comments:add_reply' reply.id %}" 
+                  hx-target="#replies-{{ reply.id }}" 
+                  hx-swap="beforeend"
+                  hx-on::after-request="document.getElementById('reply-form-{{ reply.id }}').style.display = 'none'; this.reset();"
+                  hx-indicator="#loading-spinner">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea class="form-control" name="content" rows="2" placeholder="Write a reply..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success btn-sm">Submit Reply</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleReplyForm('{{ reply.id }}')">Cancel</button>
+            </form>
+        </div>
 
-    <!-- Nested Replies -->
-    <div id="replies-{{ reply.id }}">
-        {% for nested_reply in reply.replies.all %}
-            {% include "comments/reply.html" with reply=nested_reply %}
-        {% endfor %}
+        <!-- Nested Replies -->
+        <div id="replies-{{ reply.id }}">
+            {% for nested_reply in reply.replies.all %}
+                {% include "comments/reply.html" with reply=nested_reply %}
+            {% endfor %}
+        </div>
     </div>
 </div>
+
+<script>
+function toggleReplyForm(replyId) {
+    let replyForm = document.getElementById(`reply-form-${replyId}`);
+    if (replyForm) {
+        replyForm.style.display = replyForm.style.display === "none" ? "block" : "none";
+    }
+}
+</script>

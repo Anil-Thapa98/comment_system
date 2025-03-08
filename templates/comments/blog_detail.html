@@ -4,8 +4,29 @@
 
 {% block content %}
 <div class="container">
-    <h2>{{ blog.title }}</h2>
-    <p>{{ blog.content }}</p>
+
+    <!-- Author Information -->
+    <div class="author-info">
+        <div class="author-profile-picture">
+            {% if blog.author.profile.profile_picture %}
+                <img src="{{ blog.author.profile.profile_picture.url }}" alt="{{ blog.author.username }}'s Profile Picture" width="50" height="50" class="rounded-circle">
+            {% else %}
+                <div class="no-profile-picture">No Image</div>
+            {% endif %}
+        </div>
+        <div class="author-details">
+            <p class="author-name"><strong>Author:</strong> {{ blog.author.username }}</p>
+            {% if blog.author.profile.verified %}
+                <p class="verified-badge">✅ Verified</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Blog Post -->
+    <div class="blog-post">
+        <h2>{{ blog.title }}</h2>
+        <p>{{ blog.content }}</p>
+    </div>
 
     <h3>Comments:</h3>
 
@@ -66,7 +87,7 @@ function cancelEdit(commentId) {
 }
 </script>
 
-<!-- Cool Loading Spinner -->
+<!-- Loading Spinner -->
 <div id="loading-spinner" class="loading-spinner" style="display: none;">
     <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -113,6 +134,50 @@ function cancelEdit(commentId) {
     .username-mention {
         font-weight: 600;
         color: #007bff; /* Blue color */
+    }
+
+    /* Author Information Styles */
+    .author-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .author-profile-picture img {
+        border-radius: 50%;
+        margin-right: 15px;
+    }
+
+    .author-details {
+        flex: 1;
+    }
+
+    .author-name {
+        font-size: 1.2em;
+        margin: 0;
+    }
+
+    .author-bio, .author-location {
+        margin: 5px 0;
+        color: #555;
+    }
+
+    .verified-badge {
+        color: green;
+        font-weight: bold;
+    }
+    
+
+    .no-profile-picture {
+        width: 50px;
+        height: 50px;
+        background-color: #ccc;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 0.8em;
     }
 </style>
 {% endblock %}

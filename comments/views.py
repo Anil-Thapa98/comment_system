@@ -1,8 +1,58 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404,redirect
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from .models import Comment, Blog
+
+
+from .models import Profile, Notification, Blog, Comment
+from .forms import ProfileUpdateForm
+
+@login_required
+def profile(request):
+    """Display and update the user's profile."""
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = ProfileUpdateForm(instance=profile)
+    
+    # Fetch user's blogs, comments, and notifications
+    blogs = Blog.objects.filter(author=request.user)
+    comments = Comment.objects.filter(user=request.user)
+    notifications = Notification.objects.filter(user=request.user).order_by('-timestamp')
+    
+    return render(request, 'profile/profile.html', {
+        'form': form,
+        'blogs': blogs,
+        'comments': comments,
+        'notifications': notifications
+    })
+
+@login_required
+def notifications(request):
+    """Display all notifications for the logged-in user."""
+    notifications = request.user.notifications.order_by('-timestamp')
+    return render(request, 'profile/notifications.html', {'notifications': notifications})
+
+@login_required
+def mark_notification_as_read(request, notification_id):
+    """Mark a notification as read."""
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect('comments:notifications')
+
+
+
+def blog_list(request):
+    blogs = Blog.objects.all()  # Fetch all blogs    
+    # Return the full template for regular requests
+    return render(request, 'blog.html', {'blogs': blogs})
+
 
 # Blog Detail View
 def blog_detail(request, blog_id):
@@ -49,14 +99,8 @@ def add_reply(request, comment_id):
 
             # Render the reply as an HTML fragment
             reply_html = render_to_string("comments/reply.html", {"reply": reply})
-            return JsonResponse({
-                "message": "Reply added successfully",
-                "reply_html": reply_html,
-                "reply_id": reply.id,
-                "parent_id": parent_comment.id
-            })
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
+            return HttpResponse(reply_html)
+    return HttpResponse("Invalid request", status=400)
 
 @login_required
 def edit_comment(request, comment_id):
